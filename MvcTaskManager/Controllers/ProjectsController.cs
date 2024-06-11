@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -24,15 +23,24 @@ namespace MvcTaskManager.Controllers
         [HttpGet]
         [Route("api/projects")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        public IActionResult Get()
+        public async Task<IActionResult> Get()
         {
             //System.Threading.Thread.Sleep(1000);
-            List<Project> projects = db.Projects.Include("ClientLocation").ToList();
+            List<Project> projects = await db.Projects.Include("ClientLocation").ToListAsync();
 
             List<ProjectViewModel> projectsViewModel = new List<ProjectViewModel>();
             foreach (var project in projects)
             {
-                projectsViewModel.Add(new ProjectViewModel() { ProjectID = project.ProjectID, ProjectName = project.ProjectName, TeamSize = project.TeamSize, DateOfStart = project.DateOfStart.ToString("dd/MM/yyyy"), Active = project.Active, ClientLocation = project.ClientLocation, ClientLocationID = project.ClientLocationID, Status = project.Status });
+                projectsViewModel.Add(
+                    new ProjectViewModel() 
+                    { ProjectID = project.ProjectID, 
+                        ProjectName = project.ProjectName, 
+                        TeamSize = project.TeamSize, 
+                        DateOfStart = project.DateOfStart.ToString("dd/MM/yyyy"), 
+                        Active = project.Active, 
+                        ClientLocation = project.ClientLocation, 
+                        ClientLocationID = project.ClientLocationID, 
+                        Status = project.Status });
             }
             return Ok(projectsViewModel);
         }
@@ -40,17 +48,17 @@ namespace MvcTaskManager.Controllers
         [HttpGet]
         [Route("api/projects/search/{searchby}/{searchtext}")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        public IActionResult Search(string searchBy, string searchText)
+        public async Task<IActionResult> Search(string searchBy, string searchText)
         {
             List<Project> projects = null;
             if (searchBy == "ProjectID")
-                projects = db.Projects.Include("ClientLocation").Where(temp => temp.ProjectID.ToString().Contains(searchText)).ToList();
+                projects = await db.Projects.Include("ClientLocation").Where(temp => temp.ProjectID.ToString().Contains(searchText)).ToListAsync();
             else if (searchBy == "ProjectName")
-                projects = db.Projects.Include("ClientLocation").Where(temp => temp.ProjectName.Contains(searchText)).ToList();
+                projects = await db.Projects.Include("ClientLocation").Where(temp => temp.ProjectName.Contains(searchText)).ToListAsync();
             if (searchBy == "DateOfStart")
-                projects = db.Projects.Include("ClientLocation").Where(temp => temp.DateOfStart.ToString().Contains(searchText)).ToList();
+                projects = await db.Projects.Include("ClientLocation").Where(temp => temp.DateOfStart.ToString().Contains(searchText)).ToListAsync();
             if (searchBy == "TeamSize")
-                projects = db.Projects.Include("ClientLocation").Where(temp => temp.TeamSize.ToString().Contains(searchText)).ToList();
+                projects = await db.Projects.Include("ClientLocation").Where(temp => temp.TeamSize.ToString().Contains(searchText)).ToListAsync();
 
             List<ProjectViewModel> projectsViewModel = new List<ProjectViewModel>();
             foreach (var project in projects)
@@ -80,13 +88,13 @@ namespace MvcTaskManager.Controllers
         [Route("api/projects")]
         [Authorize]
         [ValidateAntiForgeryToken]
-        public IActionResult Post([FromBody] Project project)
+        public async Task<IActionResult> Post([FromBody] Project project)
         {
             project.ClientLocation = null;
             db.Projects.Add(project);
-            db.SaveChanges();
+            await db.SaveChangesAsync();
 
-            Project existingProject = db.Projects.Include("ClientLocation").Where(temp => temp.ProjectID == project.ProjectID).FirstOrDefault();
+            Project existingProject = await db.Projects.Include("ClientLocation").Where(temp => temp.ProjectID == project.ProjectID).FirstOrDefaultAsync();
             ProjectViewModel projectViewModel = new ProjectViewModel() { ProjectID = existingProject.ProjectID, ProjectName = existingProject.ProjectName, TeamSize = existingProject.TeamSize, DateOfStart = existingProject.DateOfStart.ToString("dd/MM/yyyy"), Active = existingProject.Active, ClientLocation = existingProject.ClientLocation, ClientLocationID = existingProject.ClientLocationID, Status = existingProject.Status };
 
             return Ok(projectViewModel);
@@ -95,9 +103,9 @@ namespace MvcTaskManager.Controllers
         [HttpPut]
         [Route("api/projects")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        public IActionResult Put([FromBody] Project project)
+        public async Task<IActionResult> Put([FromBody] Project project)
         {
-            Project existingProject = db.Projects.Where(temp => temp.ProjectID == project.ProjectID).FirstOrDefault();
+            Project existingProject = await db.Projects.Where(temp => temp.ProjectID == project.ProjectID).FirstOrDefaultAsync();
             if (existingProject != null)
             {
                 existingProject.ProjectName = project.ProjectName;
@@ -109,7 +117,7 @@ namespace MvcTaskManager.Controllers
                 existingProject.ClientLocation = null;
                 db.SaveChanges();
 
-                Project existingProject2 = db.Projects.Include("ClientLocation").Where(temp => temp.ProjectID == project.ProjectID).FirstOrDefault();
+                Project existingProject2 = await db.Projects.Include("ClientLocation").Where(temp => temp.ProjectID == project.ProjectID).FirstOrDefaultAsync();
                 ProjectViewModel projectViewModel = new ProjectViewModel() { ProjectID = existingProject2.ProjectID, ProjectName = existingProject2.ProjectName, TeamSize = existingProject2.TeamSize, ClientLocationID = existingProject2.ClientLocationID, DateOfStart = existingProject2.DateOfStart.ToString("dd/MM/yyyy"), Active = existingProject2.Active, Status = existingProject2.Status, ClientLocation = existingProject2.ClientLocation };
                 return Ok(projectViewModel);
             }
@@ -122,13 +130,13 @@ namespace MvcTaskManager.Controllers
         [HttpDelete]
         [Route("api/projects")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        public int Delete(int ProjectID)
+        public async Task<int> Delete(int ProjectID)
         {
-            Project existingProject = db.Projects.Where(temp => temp.ProjectID == ProjectID).FirstOrDefault();
+            Project existingProject = await db.Projects.Where(temp => temp.ProjectID == ProjectID).FirstOrDefaultAsync();
             if (existingProject != null)
             {
                 db.Projects.Remove(existingProject);
-                db.SaveChanges();
+                await db.SaveChangesAsync();
                 return ProjectID;
             }
             else
@@ -136,6 +144,10 @@ namespace MvcTaskManager.Controllers
                 return -1;
             }
         }
+
+
+
+
     }
 }
 

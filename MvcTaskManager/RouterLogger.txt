@@ -319,3 +319,10 @@
 7/14/2022, 10:32:21 PM: lara@gmail.com navigates to /employee/tasks
 7/14/2022, 10:32:24 PM: lara@gmail.com navigates to /about
 6/7/2024, 12:41:22 AM: anonymous navigates to /
+6/11/2024, 1:24:16 AM: anonymous navigates to /
+6/11/2024, 1:46:44 AM: anonymous navigates to /
+6/11/2024, 1:50:28 AM: anonymous navigates to /
+6/11/2024, 1:52:24 AM: anonymous navigates to /signup
+6/11/2024, 10:15:54 AM: anonymous navigates to /
+6/11/2024, 10:38:24 AM: anonymous navigates to /
+6/11/2024, 12:13:06 PM: anonymous navigates to /

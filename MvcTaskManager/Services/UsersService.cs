@@ -7,6 +7,9 @@ using Microsoft.Extensions.Options;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using MvcTaskManager.Models;
+using System.Globalization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.VisualStudio.Web.CodeGeneration.Contracts.Messaging;
 
 namespace MvcTaskManager.Services
 {
@@ -60,6 +63,13 @@ namespace MvcTaskManager.Services
 
         public async Task<ApplicationUser> Register(SignUpViewModel signUpViewModel)
         {
+
+            // Validate and parse the date of birth
+            if (!DateTime.TryParseExact(signUpViewModel.DateOfBirth, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dob))
+            {
+                throw new ArgumentException("Invalid date of birth format. Please use yyyy-MM-dd.");
+            }
+
             ApplicationUser applicationUser = new ApplicationUser();
             applicationUser.FirstName = signUpViewModel.PersonName.FirstName;
             applicationUser.LastName = signUpViewModel.PersonName.LastName;
@@ -70,6 +80,7 @@ namespace MvcTaskManager.Services
             applicationUser.Gender = signUpViewModel.Gender;
             applicationUser.Role = "Employee";
             applicationUser.UserName = signUpViewModel.Email;
+            applicationUser.DateOfBirth = dob;
 
             var result = await _applicationUserManager.CreateAsync(applicationUser, signUpViewModel.Password);
             if (result.Succeeded)
@@ -127,7 +138,9 @@ namespace MvcTaskManager.Services
 
         public async Task<ApplicationUser> GetUserByEmail(string Email)
         {
+           
             return await _applicationUserManager.FindByEmailAsync(Email);
+
         }
     }
 }

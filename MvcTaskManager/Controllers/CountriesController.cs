@@ -1,10 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using MvcTaskManager.Identity;
 using MvcTaskManager.Models;
 
@@ -21,18 +21,18 @@ namespace MvcTaskManager.Controllers
 
         [HttpGet]
         [Route("api/countries")]
-        public IActionResult GetCountries()
+        public async Task<IActionResult> GetCountries()
         {
-            List<Country> countries = this.db.Countries.OrderBy(temp => temp.CountryName).ToList();
+            List<Country> countries = await this.db.Countries.OrderBy(temp => temp.CountryName).ToListAsync();
             return Ok(countries);
         }
 
         [HttpGet]
         [Route("api/countries/searchbycountryid/{CountryID}")]
         //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        public IActionResult GetByCountryID(int CountryID)
+        public async Task<IActionResult> GetByCountryID(int CountryID)
         {
-            Country country = db.Countries.Where(temp => temp.CountryID == CountryID).FirstOrDefault();
+            Country country = await db.Countries.Where(temp => temp.CountryID == CountryID).FirstOrDefaultAsync();
             if (country != null)
             {
                 return Ok(country);
@@ -44,25 +44,25 @@ namespace MvcTaskManager.Controllers
         [HttpPost]
         [Route("api/countries")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        public Country Post([FromBody] Country country)
+        public async Task<Country> Post([FromBody] Country country)
         {
             db.Countries.Add(country);
-            db.SaveChanges();
+           await db.SaveChangesAsync();
 
-            Country existingCountry = db.Countries.Where(temp => temp.CountryID == country.CountryID).FirstOrDefault();
+            Country existingCountry =  await db.Countries.Where(temp => temp.CountryID == country.CountryID).FirstOrDefaultAsync();
             return existingCountry;
         }
 
         [HttpPut]
         [Route("api/countries")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        public Country Put([FromBody] Country country)
+        public async Task<Country> Put([FromBody] Country country)
         {
-            Country existingCountry = db.Countries.Where(temp => temp.CountryID == country.CountryID).FirstOrDefault();
+            Country existingCountry = await db.Countries.Where(temp => temp.CountryID == country.CountryID).FirstOrDefaultAsync();
             if (existingCountry != null)
             {
                 existingCountry.CountryName = country.CountryName;
-                db.SaveChanges();
+               await db.SaveChangesAsync();
                 return existingCountry;
             }
             else
@@ -74,13 +74,13 @@ namespace MvcTaskManager.Controllers
         [HttpDelete]
         [Route("api/countries")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        public int Delete(int CountryID)
+        public async Task<int> Delete(int CountryID)
         {
-            Country existingCountry = db.Countries.Where(temp => temp.CountryID == CountryID).FirstOrDefault();
+            Country existingCountry = await db.Countries.Where(temp => temp.CountryID == CountryID).FirstOrDefaultAsync();
             if (existingCountry != null)
             {
                 db.Countries.Remove(existingCountry);
-                db.SaveChanges();
+               await db.SaveChangesAsync();
                 return CountryID;
             }
             else

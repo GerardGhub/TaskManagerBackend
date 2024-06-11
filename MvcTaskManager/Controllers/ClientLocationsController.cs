@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -13,6 +11,7 @@ namespace MvcTaskManager.Controllers
     public class ClientLocationsController : Controller
     {
         private ApplicationDbContext db;
+        private object message;
 
         public ClientLocationsController(ApplicationDbContext db)
         {
@@ -45,13 +44,26 @@ namespace MvcTaskManager.Controllers
         [HttpPost]
         [Route("api/clientlocations")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        public ClientLocation Post([FromBody] ClientLocation clientLocation)
+        public IActionResult Post([FromBody] ClientLocation clientLocation)
         {
-            db.ClientLocations.Add(clientLocation);
-            db.SaveChanges();
+
+            // Check if a location with the same name already exists    
+            var checkClientLocationIfExist = db.ClientLocations.Where(temp => temp.ClientLocationName == clientLocation.ClientLocationName).FirstOrDefault();
+            if (checkClientLocationIfExist != null)
+            {
+                return BadRequest(new { message = "Client Location name already exists." });
+
+            }
+         
+
+                db.ClientLocations.Add(clientLocation);
+                db.SaveChanges();
+
+
+            // Retrieve the newly added record based on ID
 
             ClientLocation existingClientLocation = db.ClientLocations.Where(temp => temp.ClientLocationID == clientLocation.ClientLocationID).FirstOrDefault();
-            return clientLocation;
+            return Ok(existingClientLocation);
         }
 
         [HttpPut]
@@ -78,6 +90,8 @@ namespace MvcTaskManager.Controllers
         public int Delete(int ClientLocationID)
         {
             ClientLocation existingClientLocation = db.ClientLocations.Where(temp => temp.ClientLocationID == ClientLocationID).FirstOrDefault();
+
+            // Check if the client location exists
             if (existingClientLocation != null)
             {
                 db.ClientLocations.Remove(existingClientLocation);
@@ -89,6 +103,9 @@ namespace MvcTaskManager.Controllers
                 return -1;
             }
         }
+
+
+
     }
 }
 

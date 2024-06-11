@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -24,12 +25,14 @@ namespace MvcTaskManager.Controllers
         [HttpGet]
         [Route("/api/tasks")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        public IActionResult Get()
+        public async Task<IActionResult> Get()
         {
             string currentUserId = User.Identity.Name;
+
             List<GroupedTask> grouppedTasks = new List<GroupedTask>();
-            List<TaskStatus> taskStatuses = db.TaskStatuses.ToList();
-            List<Task> tasks = db.Tasks
+            List<Models.TaskStatus> taskStatuses = await db.TaskStatuses.ToListAsync();
+
+            List<Models.Task> tasks = db.Tasks
                 .Include(temp => temp.CreatedByUser)
                 .Include(temp => temp.AssignedToUser)
                 .Include(temp => temp.Project).ThenInclude(temp => temp.ClientLocation)
@@ -73,7 +76,7 @@ namespace MvcTaskManager.Controllers
         public IActionResult GetByTaskID(int TaskID)
         {
             //Get task from database
-            Task task = db.Tasks
+            Models.Task task = db.Tasks
                 .Include(temp => temp.CreatedByUser)
                 .Include(temp => temp.AssignedToUser)
                 .Include(temp => temp.Project).ThenInclude(temp => temp.ClientLocation)
@@ -115,7 +118,7 @@ namespace MvcTaskManager.Controllers
             db.SaveChanges();
 
             //Update existing task
-            Task existingTask = db.Tasks.Where(temp => temp.TaskID == taskStatusDetail.TaskID).FirstOrDefault();
+            Models.Task existingTask = db.Tasks.Where(temp => temp.TaskID == taskStatusDetail.TaskID).FirstOrDefault();
             existingTask.LastUpdatedOn = DateTime.Now;
             existingTask.CurrentStatus = db.TaskStatuses.Where(temp => temp.TaskStatusID == taskStatusDetail.TaskStatusID).FirstOrDefault().TaskStatusName;
             existingTask.CurrentTaskStatusID = taskStatusDetail.TaskStatusID;
@@ -129,7 +132,7 @@ namespace MvcTaskManager.Controllers
         [HttpPost]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [Route("/api/createtask")]
-        public IActionResult Post([FromBody] Task task)
+        public async Task<IActionResult> Post([FromBody] Models.Task task)
         {
             task.Project = null;
             task.CreatedByUser = null;
@@ -145,7 +148,8 @@ namespace MvcTaskManager.Controllers
             task.CreatedBy = User.Identity.Name;
 
             db.Tasks.Add(task);
-            db.SaveChanges();
+            await db.SaveChangesAsync();
+
 
             TaskStatusDetail taskStatusDetail = new TaskStatusDetail();
             taskStatusDetail.TaskID = task.TaskID;
@@ -156,9 +160,9 @@ namespace MvcTaskManager.Controllers
             taskStatusDetail.User = null;
             taskStatusDetail.Description = "Task Created";
             db.TaskStatusDetails.Add(taskStatusDetail);
-            db.SaveChanges();
+            await db.SaveChangesAsync();
 
-            Task existingTask = db.Tasks.Where(temp => temp.TaskID == task.TaskID).FirstOrDefault();
+            Models.Task existingTask = await db.Tasks.Where(temp => temp.TaskID == task.TaskID).FirstOrDefaultAsync();
             return Ok(existingTask);
         }
     }
